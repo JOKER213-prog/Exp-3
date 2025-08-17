@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1121;
+            color: #e0e0e0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .mobile-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #10162f;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .download-btn {
+            background: linear-gradient(90deg, #3a7bfd, #5b45ff);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .day-selector {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .day-btn {
+            background-color: transparent;
+            border: 2px solid #2a315a;
+            color: #e0e0e0;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day-btn.active {
+            background-color: #3a7bfd;
+            border-color: #3a7bfd;
+        }
+        
+        .day-btn:not(.active):hover {
+            background-color: #2a315a;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .class-slot {
+            background-color: #3a7bfd;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .class-slot.no-class-slot {
+             background-color: #1c234a;
+        }
+
+        .class-slot span {
+            display: block;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .class-slot .time {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .message-card {
+            background-color: #1c234a;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .message-card p {
+            margin: 0;
+            font-size: 16px;
+            color: #b0b8d8;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* --- New Print Styles --- */
+        .print-only-title {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background-color: #ffffff;
+                color: #000000;
+                padding: 0;
+                margin: 0;
+            }
+
+            .mobile-container {
+                box-shadow: none;
+                border: 1px solid #dbdbdb;
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .header, .day-selector {
+                display: none;
+            }
+            
+            .print-only-title {
+                display: block;
+                text-align: center;
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            .class-slot, .class-slot.no-class-slot, .message-card {
+                background-color: #f0f0f0 !important;
+                color: #000000 !important;
+                border: 1px solid #cccccc;
+            }
+
+            .class-slot span, .message-card p {
+                text-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <div class="header">
+            <h1>Timetable</h1>
+            <button class="download-btn">Download ⬇</button>
+        </div>
+
+        <div class="day-selector">
+            <button class="day-btn" data-day="1">1</button>
+            <button class="day-btn active" data-day="2">2</button>
+            <button class="day-btn" data-day="3">3</button>
+            <button class="day-btn" data-day="4">4</button>
+            <button class="day-btn" data-day="5">5</button>
+        </div>
+
+        <h2 id="print-title" class="print-only-title"></h2>
+        
+        <div id="schedule-content">
+            </div>
+    </div>
+
+<script>
+    const schedules = {
+        1: { name: "Monday", isGrid: false, message: "No classes are allotted for Monday" },
+        2: { name: "Tuesday", isGrid: true, classes: [
+                { time: '08:00', name: 'Basic Civil and...' }, { time: '12:30', name: 'Chemistry' },
+                { time: '08:50', name: 'Basic Civil and...' }, { time: '01:25', name: 'Chemistry' },
+                { time: '09:45', name: 'Basic Civil and...' }, { time: '02:20', name: 'French' },
+                { time: '10:40', name: 'Basic Civil and...' }, { time: '03:10', name: 'French' },
+                { time: '11:35', name: 'No class' }, { time: '04:00', name: 'No class' }
+            ]},
+        3: { name: "Wednesday", isGrid: true, classes: [
+                { time: '08:00', name: 'Philosophy of...' }, { time: '12:30', name: 'No class' },
+                { time: '08:50', name: 'Philosophy of...' }, { time: '01:25', name: 'No class' },
+                { time: '09:45', name: 'No class' }, { time: '02:20', name: 'No class' },
+                { time: '10:40', name: 'Calculus and L...' }, { time: '03:10', name: 'No class' },
+                { time: '11:35', name: 'Chemistry' }, { time: '04:00', name: 'No class' }
+            ]},
+        4: { name: "Thursday", isGrid: true, classes: [
+                { time: '08:00', name: 'No class' }, { time: '12:30', name: 'Calculus and L...' },
+                { time: '08:50', name: 'No class' }, { time: '01:25', name: 'Calculus and L...' },
+                { time: '09:45', name: 'No class' }, { time: '02:20', name: 'Chemistry' },
+                { time: '10:40', name: 'No class' }, { time: '03:10', name: 'Programming f...' },
+                { time: '11:35', name: 'No class' }, { time: '04:00', name: 'Philosophy of...' }
+            ]},
+        5: { name: "Friday", isGrid: true, classes: [
+                { time: '08:00', name: 'Programming f...' }, { time: '12:30', name: 'No class' },
+                { time: '08:50', name: 'Programming f...' }, { time: '01:25', name: 'No class' },
+                { time: '09:45', name: 'Philosophy of ...' }, { time: '02:20', name: 'No class' },
+                { time: '10:40', name: 'No class' }, { time: '03:10', name: 'Chemistry' },
+                { time: '11:35', name: 'Calculus and L...' }, { time: '04:00', name: 'Chemistry' }
+            ]}
+    };
+
+    const scheduleContainer = document.getElementById('schedule-content');
+    const dayButtons = document.querySelectorAll('.day-btn');
+    const downloadButton = document.querySelector('.download-btn');
+    const printTitle = document.getElementById('print-title');
+
+    function renderSchedule(day) {
+        scheduleContainer.innerHTML = '';
+        const scheduleData = schedules[day];
+
+        // Update the hidden title for printing
+        printTitle.textContent = `Timetable for ${scheduleData.name}`;
+
+        if (scheduleData.isGrid) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+            scheduleData.classes.forEach(cls => {
+                const slot = document.createElement('div');
+                const isNoClass = cls.name.toLowerCase() === 'no class';
+                slot.className = isNoClass ? 'class-slot no-class-slot' : 'class-slot';
+                
+                slot.innerHTML = `<span class="time">${cls.time}</span><span class="subject">${cls.name}</span>`;
+                grid.appendChild(slot);
+            });
+            scheduleContainer.appendChild(grid);
+        } else {
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            messageCard.innerHTML = `<p>${scheduleData.message}</p>`;
+            scheduleContainer.appendChild(messageCard);
+        }
+    }
+
+    dayButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            dayButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            const day = button.getAttribute('data-day');
+            renderSchedule(day);
+        });
+    });
+    
+    // --- New Event Listener for the Download Button ---
+    downloadButton.addEventListener('click', () => {
+        window.print();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeDay = document.querySelector('.day-btn.active').getAttribute('data-day');
+        renderSchedule(activeDay);
+    });
+</script>
+
+</body>
+</html>
